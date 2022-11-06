@@ -13,7 +13,7 @@ public:
 
 
     static const std::size_t DEFAULT_CAPACITY{1};
-    dynamic_array(std::size_t capacity): m_begin(allocate())
+    dynamic_array(std::size_t capacity): m_begin(allocate(capacity))
             , m_last(m_begin)
             , m_end(m_begin + capacity)
     {
@@ -72,7 +72,7 @@ public:
         }
         else{
           //  destroy_obj_all();
-            delete[]m_begin;
+            ::operator delete[](m_begin);
             m_begin=std::exchange(other.m_begin, nullptr);
             m_last=std::exchange(other.m_last, nullptr);
             m_end=std::exchange(other.m_end, nullptr);
@@ -107,7 +107,7 @@ public:
 
     ~dynamic_array() noexcept {
         destroy_obj_all();///Destroy all objects
-        delete[] m_begin;
+        ::operator delete[] (m_begin);
         m_begin= nullptr;
         m_last= nullptr;
         m_end= nullptr;
@@ -232,10 +232,11 @@ private:
             auto current_size = size();
             auto new_size = current_size * 3 / 2 + 1;
             dynamic_array<T>other(new_size);
-            for(auto &i:*this){
+            for( auto &i:*this){
                 other.push_back(std::move(i));
             }
             *this=std::move(other);
+
         }
     }
 
