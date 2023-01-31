@@ -17,7 +17,7 @@ int main() {
     v_str2.push_back(std::string{"hello"});
     v_str2.push_back(std::string{"helly"});
     v_str2.push_back(std::string{"hellay"});
-    dynamic_array<std::string>v_str3(std::move(v_str2));///This does not work without move constructor or move assignment
+    dynamic_array<std::string>v_str3(std::move(v_str2));
     std::cout<<"\nTest iterator v_str3:\n";
     for(const auto&i:v_str3){
         std::cout<<i<<"\n";
@@ -83,13 +83,57 @@ int main() {
         std::cout<<i<<" ";
     }
     */
+
     dynamic_array<my_string>v_str;
     v_str.push_back(my_string("Hello1"));
     v_str.push_back(my_string("Hello2"));
     v_str.push_back(my_string("Hello3"));
     v_str.push_back(my_string("Hello4"));
     v_str.push_back(std::move(my_string("Hello5")));
+   // dynamic_array<my_string>v_str2;
+
     std::cout<<"\n List of words: ";
+    for(const auto&i:v_str){
+        std::cout<<i<<" ";
+    }
+
+    v_str.insert(v_str.begin(),my_string("Hello0"));
+    std::cout<<"\nInsert at 1st array\n";
+    for(const auto&i:v_str){
+        std::cout<<i<<" ";
+    }
+
+    v_str.insert(v_str.begin()+3, my_string("Hello9"));
+    std::cout<<"\nInsert at 3rd element\n";
+    for(const auto&i:v_str){
+        std::cout<<i<<" ";
+    }
+
+    v_str.insert(v_str.end(), my_string("Hello10"));
+    std::cout<<"\nInsert at last  element\n";
+    for(const auto&i:v_str){
+        std::cout<<i<<" ";
+    }
+
+    v_str.erase(v_str.begin());
+    std::cout<<"\nErase at 1st element\n";
+    for(const auto&i:v_str){
+        std::cout<<i<<" ";
+    }
+    v_str.erase(v_str.begin()+3);
+    std::cout<<"\nErase at 3rd element\n";
+    for(const auto&i:v_str){
+        std::cout<<i<<" ";
+    }
+
+    v_str.erase(v_str.end());
+    std::cout<<"\nErase at last element\n";
+    for(const auto&i:v_str){
+        std::cout<<i<<" ";
+    }
+
+    v_str.erase(v_str.begin(),v_str.begin()+4);
+    std::cout<<"\nErase at [0:4) elements\n";
     for(const auto&i:v_str){
         std::cout<<i<<" ";
     }

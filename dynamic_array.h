@@ -24,11 +24,10 @@ public:
 
 
     // TODO: copy ctor
-    dynamic_array(const dynamic_array&other):dynamic_array(other.capacity())
+    dynamic_array( const dynamic_array& other):dynamic_array(other.capacity())
     {
-        for(int i=0;i<=other.size();i++){
-            this->push_back(other.m_begin[i]);
-        }
+        for(auto &i:other)
+            this->push_back(i);
     }
     T*begin(){
         return m_begin;
@@ -38,25 +37,19 @@ public:
         return m_last;
     }
 
-    ///Function to destroy object
-    void destroy_obj_all(){
-        if(m_begin== nullptr)
-            return;
-        ///for(auto obj:this) cannot
-        for(auto it=begin();it!=end();it++){
-            (*it).~T();
-        }
-    }
+
 
     // TODO: copy assignment
-    dynamic_array& operator=(const dynamic_array&other){
+    dynamic_array& operator=( const dynamic_array &other){
         if(this==&other){
             return *this;
         }
         else{
-            destroy_obj_all();//Destroy all objects stored in memory
-            delete[]m_begin;//Deallocated memory
-            return *this=dynamic_array<T>(other);
+
+            delete[]m_begin;///Destroy object and  deallocated memory
+            std::swap(*this,dynamic_array<T>(other));
+            return *this;
+
         }
     }
     ///Move contructor
@@ -71,7 +64,7 @@ public:
             return *this;
         }
         else{
-          //  destroy_obj_all();
+            destroy_obj_all();
             ::operator delete[](m_begin);
             m_begin=std::exchange(other.m_begin, nullptr);
             m_last=std::exchange(other.m_last, nullptr);
@@ -87,7 +80,7 @@ public:
    }
     void push_back(const T& val) {
         adjust_capacity();
-       ::new (m_last) T{std::move(val)};
+       ::new (m_last) T{val};
         m_last++;
     }
 
@@ -97,10 +90,8 @@ public:
     bool empty() const { return m_begin == m_end; }
     void clear() {
         destroy_obj_all();///Destroy objects
-        delete[]m_begin;
-        m_begin= nullptr;
-        m_last= nullptr;
-        m_end = m_begin; }
+        m_last= m_begin;
+         }
 
     const T& operator[](int index) const { return m_begin[index]; }
     T& operator[](int index) { return m_begin[index]; }
@@ -115,63 +106,54 @@ public:
     }
     using iterator = T*;
     using const_iterator = const T*;
-    iterator insert(const_iterator pos, const T& value){
-
-        auto cur_size=size()+1;
-        auto cur_cap=cur_size*3/2+1;
-        auto ptr=new T[cur_cap];
-        T*cur_pos= nullptr;
-        if(pos==m_begin){
-            ptr[0]=value;
-            cur_pos=&ptr[0];
-            std::memcpy(&ptr[1],&m_begin[0],sizeof(m_begin[0])*size());
-        }
-        else if(pos>m_begin && pos <=m_last){
-            std::memcpy(&ptr[0],&m_begin[0],sizeof(m_begin[0])*(pos-m_begin));
-            ptr[pos-m_begin]=value;
-            cur_pos=&ptr[pos-m_begin];
-            std::memcpy(&ptr[pos-m_begin+1],&m_begin[pos-m_begin],sizeof(m_begin[0])*(m_end-pos));
-        }
-        else{
-            std::memcpy(&ptr[0],&m_begin[0],sizeof(m_begin[0])*size());
-            ptr[size()]=value;
-            cur_pos=&ptr[size()];
-        }
-        destroy_obj_all(); ///Destroy all objects
-        delete[]m_begin;
-        m_begin=&ptr[0];
-        m_last=m_begin+cur_size;
-        m_end=m_begin+cur_cap;
-        return cur_pos;
-    }
     iterator insert(const_iterator pos, T&& value){
+        auto new_size=size()+1;
+        auto new_cap=capacity();
+        if(m_last==m_end){
+            new_cap=new_cap*3/2+1;
+        }
+       auto ptr= allocate(new_cap); ///Allocate memory
 
-        auto cur_size=size()+1;
-        auto cur_cap=cur_size*3/2+1;
-        auto ptr=new T[cur_cap];
-        T*cur_pos= nullptr;
-        if(pos==m_begin){
-            ptr[0]=std::move(value);
-            cur_pos=&ptr[0];
-            std::memmove(&ptr[1],&m_begin[0],sizeof(m_begin[0])*size());
+
+       for(int i=0;i!=(pos-m_begin);i++){
+               ::new(ptr+i)T{std::move(m_begin[i])};
+       }
+       ::new(ptr+(pos-m_begin))T{std::move(value)};///Insert value
+       for(int i=(pos-m_begin);i<(m_last-m_begin);i++){
+           ::new(ptr+i+1)T{std::move(m_begin[i])};
+       }
+
+
+       destroy_obj_all();//Destroy all objects
+       ::operator delete[](m_begin);//Deallocate old memory
+       m_begin=ptr;
+       m_last=ptr+new_size;
+       m_end=ptr+new_cap;
+       return &m_begin[pos-m_begin];
+
+    }
+
+    iterator insert(const_iterator pos, const T& value){
+        auto new_size=size()+1;
+        auto new_cap=capacity();
+        if(m_last==m_end){
+            new_cap=new_cap*3/2+1;
         }
-        else if(pos>m_begin && pos <=m_last){
-            std::memmove(&ptr[0],&m_begin[0],sizeof(m_begin[0])*(pos-m_begin));
-            ptr[pos-m_begin]=std::move(value);
-            cur_pos=&ptr[pos-m_begin];
-            std::memmove(&ptr[pos-m_begin+1],&m_begin[pos-m_begin],sizeof(m_begin[0])*(m_end-pos));
+        auto ptr= allocate(new_cap); ///Allocate memory
+
+        for(int i=0;i!=(pos-m_begin);i++){
+            ::new(ptr+i)T{m_begin[i]};
         }
-        else{
-            std::memmove(&ptr[0],&m_begin[0],sizeof(m_begin[0])*size());
-            ptr[size()]=std::move(value);
-            cur_pos=&ptr[size()];
+        ::new(ptr+(pos-m_begin))T{value};///Insert value
+        for(int i=(pos-m_begin);i<(m_last-m_begin);i++){
+            ::new(ptr+i+1)T{std::move(m_begin[i])};
         }
-        destroy_obj_all();///Destroy all objects
-        delete[]m_begin;
-        m_begin=&ptr[0];
-        m_last=m_begin+cur_size;
-        m_end=m_begin+cur_cap;
-        return cur_pos;
+        destroy_obj_all();//Destroy all objects
+        ::operator delete[](m_begin);//Deallocate old memory
+        m_begin=ptr;
+        m_last=ptr+new_size;
+        m_end=ptr+new_cap;
+        return m_begin[pos-m_begin];
     }
 
     iterator erase( iterator pos ){
@@ -180,40 +162,50 @@ public:
         }
         else{
            if(pos==m_last){
-               m_last->~T();//Destroy object
                m_last--;
+               m_last->~T();//Destroy object
            }
            else{
-              for(int i=(pos-m_begin);i!=(m_last-pos);i++){
-                  m_begin[i]=std::move(m_begin[i+1]);
+              for(int i=(pos-m_begin);i!=(m_last-m_begin-1);i++){
+                  (m_begin+i)->~T();
+                  ::new(m_begin+i)T{std::move(m_begin[i+1])};
               }
-               m_last->~T();//Destroy object
+
                m_last--;
+               m_last->~T();//Destroy object
            }
            return m_last;
         }
     }
     iterator erase( const_iterator pos ){
-        return erase(pos);
+        if(pos<m_begin||pos>m_last){
+            return m_last;
+        }
+        else{
+            if(pos==m_last){
+                m_last--;
+                m_last->~T();//Destroy object
+            }
+            else{
+                for(int i=(pos-m_begin);i!=(m_last-m_begin-1);i++){
+                    (m_begin+i)->~T();
+                    ::new(m_begin+i)T{std::move(m_begin[i+1])};
+                }
+
+                m_last--;
+                m_last->~T();//Destroy object
+            }
+            return m_last;
+        }
     }
     iterator erase( iterator first, iterator last ){
         if(first<=m_begin && last>m_last ){
-            destroy_obj_all();///Destroy all objects
-            delete[]m_begin;
-            m_begin = nullptr;
-            m_last = nullptr;
-            m_end = nullptr;
+            clear();
         }
-        else{
-           int j=first-m_begin;
-           for(int i=(last-m_begin);i!=(m_last-first+1);i++){
-               m_begin[j]=std::move(m_begin[i]);
-               j++;
-           }
-           for(auto i=last;i<=m_last;i++){
-               i->~T();///Destroy object
-           }
-           m_last-=(last-first);
+        else {
+            for(int i=0;i!=(last-first);i++){
+                erase(first);
+            }
         }
         return m_last;
     }
@@ -225,6 +217,15 @@ private:
     T*allocate(std::size_t n=DEFAULT_CAPACITY){
         return static_cast<T*>( operator new[](sizeof(T) * n) );
     }
+    ///Function to destroy object
+    void destroy_obj_all(){
+        if(m_begin== nullptr)
+            return;
+        ///for(auto obj:this) cannot
+        for(auto it=begin();it!=end();it++){
+            (*it).~T();
+        }
+    }
 
     void adjust_capacity() {
         if (m_last == m_end) {
@@ -232,7 +233,7 @@ private:
             auto current_size = size();
             auto new_size = current_size * 3 / 2 + 1;
             dynamic_array<T>other(new_size);
-            for( auto &i:*this){
+            for(auto &i:*this){
                 other.push_back(std::move(i));
             }
             *this=std::move(other);
