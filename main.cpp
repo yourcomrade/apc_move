@@ -7,10 +7,10 @@ int main() {
     // finalize dynamic_array: add copy ctor, copy assignment op using swap
     // make dynamic_array generic
     // make the array iterable
-    // add my_string instances to the dynamic_array
+    // add basic_tracked_string instances to the dynamic_array
     // check how many copies are being made
     // introduce move semantics
-    // prevent copies of my_string!
+    // prevent copies of basic_tracked_string!
     // rule of 5
 
    /* dynamic_array<std::string>v_str2;
@@ -84,32 +84,37 @@ int main() {
     }
     */
 
-    dynamic_array<my_string>v_str;
-    v_str.push_back(my_string("Hello1"));
-    v_str.push_back(my_string("Hello2"));
-    v_str.push_back(my_string("Hello3"));
-    v_str.push_back(my_string("Hello4"));
-    v_str.push_back(std::move(my_string("Hello5")));
-   // dynamic_array<my_string>v_str2;
-
+    dynamic_array<basic_tracked_string<char>>v_str;
+    v_str.push_back(basic_tracked_string<char>("Hello1"));
+    v_str.push_back(basic_tracked_string("Hello2"));
+    v_str.push_back(basic_tracked_string("Hello3"));
+    v_str.push_back(basic_tracked_string("Hello4"));
+    v_str.push_back(std::move(basic_tracked_string("Hello5")));
+   dynamic_array<basic_tracked_string<char>>v_str2;
+    v_str2.push_back(basic_tracked_string("World1"));
+    v_str2.push_back(basic_tracked_string("World2"));
+    v_str2.push_back(basic_tracked_string("World3"));
+    v_str2.push_back(basic_tracked_string("World4"));
+    v_str2.push_back(std::move(basic_tracked_string("World5")));
+/*
     std::cout<<"\n List of words: ";
     for(const auto&i:v_str){
         std::cout<<i<<" ";
     }
 
-    v_str.insert(v_str.begin(),my_string("Hello0"));
+    v_str.insert(v_str.begin(),basic_tracked_string("Hello0"));
     std::cout<<"\nInsert at 1st array\n";
     for(const auto&i:v_str){
         std::cout<<i<<" ";
     }
 
-    v_str.insert(v_str.begin()+3, my_string("Hello9"));
+    v_str.insert(v_str.begin()+3, basic_tracked_string("Hello9"));
     std::cout<<"\nInsert at 3rd element\n";
     for(const auto&i:v_str){
         std::cout<<i<<" ";
     }
 
-    v_str.insert(v_str.end(), my_string("Hello10"));
+    v_str.insert(v_str.end(), basic_tracked_string("Hello10"));
     std::cout<<"\nInsert at last  element\n";
     for(const auto&i:v_str){
         std::cout<<i<<" ";
@@ -136,7 +141,9 @@ int main() {
     std::cout<<"\nErase at [0:4) elements\n";
     for(const auto&i:v_str){
         std::cout<<i<<" ";
-    }
+    }*/
+    v_str = v_str2;
+
 
     return 0;
 }

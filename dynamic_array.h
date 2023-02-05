@@ -10,7 +10,12 @@
 template<typename T>
 class dynamic_array {
 public:
+    using value_type = T;
+    using reference = T&;
+    using const_reference = const T&;
 
+    using iterator = T*;
+    using const_iterator = const T*;
 
     static const std::size_t DEFAULT_CAPACITY{1};
     dynamic_array(std::size_t capacity): m_begin(allocate(capacity))
@@ -29,25 +34,31 @@ public:
         for(auto &i:other)
             this->push_back(i);
     }
-    T*begin(){
+    const_iterator begin()const{
         return m_begin;
     }
-    T* end(){
-
+    const_iterator end()const{
+        return m_end;
+    }
+    iterator begin(){
+        return m_begin;
+    }
+    iterator end(){
         return m_last;
     }
 
 
 
     // TODO: copy assignment
-    dynamic_array& operator=( const dynamic_array &other){
+    dynamic_array& operator=(const dynamic_array& other){
         if(this==&other){
             return *this;
         }
         else{
 
-            delete[]m_begin;///Destroy object and  deallocated memory
-            std::swap(*this,dynamic_array<T>(other));
+
+            auto other2 = dynamic_array<T>(other);
+            std::swap(*this,other2);
             return *this;
 
         }
@@ -93,8 +104,8 @@ public:
         m_last= m_begin;
          }
 
-    const T& operator[](int index) const { return m_begin[index]; }
-    T& operator[](int index) { return m_begin[index]; }
+    const T& operator[](std::size_t index) const { return m_begin[index]; }
+    T& operator[](std::size_t index) { return m_begin[index]; }
 
     ~dynamic_array() noexcept {
         destroy_obj_all();///Destroy all objects
@@ -104,8 +115,7 @@ public:
         m_end= nullptr;
 
     }
-    using iterator = T*;
-    using const_iterator = const T*;
+
     iterator insert(const_iterator pos, T&& value){
         auto new_size=size()+1;
         auto new_cap=capacity();
@@ -223,7 +233,7 @@ private:
             return;
         ///for(auto obj:this) cannot
         for(auto it=begin();it!=end();it++){
-            (*it).~T();
+            (it)->~T();
         }
     }
 
